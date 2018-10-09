@@ -42,8 +42,9 @@
       , leftWord = span()
       , rightWord = span()
       , pivotChar = span("sr-pivot")
-      , word = div("sr-word", [leftWord, pivotChar, rightWord])
-      
+      , decorator = span("sr-decorator")
+      , word = div("sr-word", [leftWord, pivotChar, rightWord, decorator])
+
       , progressBar = div("sr-progress")
       , message = div("sr-message")
       , reticle = div("sr-reticle")
@@ -59,7 +60,7 @@
       , wrapper = div("sr-reader-wrapper", [box])
 
       , unlisten;
-    
+
     box.onkeyup = box.onkeypress = function (ev) {
       if(!ev.ctrlKey && !ev.metaKey) {
         ev.stopImmediatePropagation();
@@ -92,6 +93,7 @@
       this.setScale(config("scale"));
       this.setWPM(config("target_wpm"));
       this.setFont(config("font_family"));
+      this.setFontWeight(config("font_weight"));
 
       if (config("show_message")) {
         this.showMessage();
@@ -133,6 +135,9 @@
       document.documentElement.scrollTop = scrollTop;
 
       box.onblur = grabFocus;
+      window.onfocus = function() {
+        setTimeout(grabFocus, 100);
+      }
 
       typeof cb === 'function' && window.setTimeout(cb, 340);
     };
@@ -160,16 +165,24 @@
     this.setWPM = function (target_wpm) {
       wpm.innerHTML = target_wpm + "";
     };
-    
+
     this.setFont = function (font) {
       // thanks for pointing that out
       leftWord.style.fontFamily = font;
       pivotChar.style.fontFamily = font;
       rightWord.style.fontFamily = font;
+      decorator.style.fontFamily = font;
       leftWrap.style.fontFamily = font;
       rightWrap.style.fontFamily = font;
       wpm.style.fontFamily = font;
       message.style.fontFamily = font;
+    };
+
+    this.setFontWeight = function (fontWeight) {
+      leftWord.style.fontWeight = fontWeight;
+      pivotChar.style.fontWeight = fontWeight;
+      rightWord.style.fontWeight = fontWeight;
+      decorator.style.fontWeight = fontWeight;
     };
 
     this.applyTheme = function (theme) {
@@ -194,6 +207,7 @@
       rightWrap.style.color = c.wrap_foreground;
       reticle.style.borderColor = c.reticle;
       pivotChar.style.color = c.pivot;
+      decorator.style.color = c.message;
       progressBar.style.borderColor = c.progress_bar_foreground;
       progressBar.style.backgroundColor = c.progress_bar_background;
       message.style.color = c.message;
@@ -219,11 +233,12 @@
 
     this.started = false;
 
-    this.setWord = function (token) {
+    this.setWord = function (token, dec) {
       var pivot = calculatePivot(token.replace(/[?.,!:;*-]+$/, ""));
       leftWord.innerHTML = token.substr(0, pivot);
       pivotChar.innerHTML = token.substr(pivot, 1);
       rightWord.innerHTML = token.substr(pivot + 1)
+      if (typeof dec !== "undefined") decorator.innerHTML = dec;
 
       word.offsetWidth;
       var pivotCenter = reticle.offsetLeft + (reticle.offsetWidth / 2);
@@ -248,7 +263,7 @@
 
     this.clear = function () {
       this.setWrap("", "");
-      this.setWord("   ");
+      this.setWord("   ", "");
     };
   }
 
